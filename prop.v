@@ -67,3 +67,20 @@ Proof.
   apply db_thu. Qed.
 
 Print okdw'.
+
+Definition okd_before2 :=
+  forall d1 d2 d3,
+  ok_day d3 ->
+  day_before d2 d1 ->
+  day_before d3 d2 ->
+  ok_day d1.
+
+Theorem okd_before2_valid:okd_before2.
+Proof.
+  unfold okd_before2.
+  intros.
+  apply okd_before with (d2:=d2).
+  apply okd_before with (d2:=d3).
+  apply H.
+  apply H1.
+  apply H0. Qed.
