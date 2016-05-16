@@ -84,3 +84,12 @@ Proof.
   apply H.
   apply H1.
   apply H0. Qed.
+
+Definition okd_before2_valid' : okd_before2 :=
+  fun (d1 d2 d3:day) =>
+  fun (H: ok_day d3) =>
+  fun (H0: day_before d2 d1) =>
+  fun (H1: day_before d3 d2) =>
+  okd_before d1 d2 (okd_before d2 d3 H H1) H0.
+
+Print okd_before2_valid.
