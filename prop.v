@@ -93,3 +93,5 @@ Definition okd_before2_valid' : okd_before2 :=
   okd_before d1 d2 (okd_before d2 d3 H H1) H0.
 
 Print okd_before2_valid.
+
+Check nat_ind.
