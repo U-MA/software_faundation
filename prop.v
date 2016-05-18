@@ -1,5 +1,19 @@
 Require Export Poly_J.
 
+Check (2 + 2 = 4).
+
+Check (ble_nat 3 2 = false).
+
+Check (2 + 2 = 5).
+
+Theorem plus_2_2_is_4:
+  2 + 2 = 4.
+Proof.
+  reflexivity. Qed.
+
+Definition plus_fact:Prop:= 2 + 2 = 4.
+Check plus_fact.
+
 Definition even (n:nat) : Prop :=
   evenb n = true.
 
@@ -95,3 +109,44 @@ Definition okd_before2_valid' : okd_before2 :=
 Print okd_before2_valid.
 
 Check nat_ind.
+
+Theorem mult_0_r':forall n:nat,
+  n * 0 = 0.
+Proof.
+  apply nat_ind.
+  Case "O".
+    reflexivity.
+  Case "S".
+    simpl.
+    intros n IHn.
+    rewrite -> IHn.
+    reflexivity. Qed.
+
+Theorem plus_one_r':forall n:nat,
+  n + 1 = S n.
+Proof.
+  apply nat_ind.
+  Case "0".
+    reflexivity.
+  Case "S".
+  intros n IHn.
+  simpl.
+  rewrite -> IHn.
+  reflexivity. Qed.
+
+Inductive yesno:Type:=
+|yes:yesno
+|no:yesno.
+
+Check yesno_ind.
+
+Inductive rgb:Type:=
+|red:rgb
+|green:rgb
+|blue:rgb.
+Check rgb_ind.
+
+Inductive natlist:Type:=
+|nnil:natlist
+|ncons:nat->natlist->natlist.
+Check natlist.
