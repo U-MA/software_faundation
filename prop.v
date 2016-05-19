@@ -150,3 +150,22 @@ Inductive natlist:Type:=
 |nnil:natlist
 |ncons:nat->natlist->natlist.
 Check natlist.
+
+Definition P_mOr(n:nat):Prop:=
+  n * 0 = 0.
+
+Definition P_mOr':nat->Prop:=
+  fun n => n * 0 = 0.
+
+Theorem mult_O_r'':forall n:nat,
+  P_mOr n.
+Proof.
+  apply nat_ind.
+  Case "n = 0".
+    reflexivity.
+  Case "n = S n".
+    unfold P_mOr.
+    simpl.
+    intros n' IHn'.
+    apply IHn'.
+Qed.
