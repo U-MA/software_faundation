@@ -169,3 +169,17 @@ Proof.
     intros n' IHn'.
     apply IHn'.
 Qed.
+
+Inductive ev:nat->Prop:=
+|ev_O:ev O
+|ev_SS:forall n:nat, ev n -> ev (S (S n)).
+
+Theorem four_ev':
+  ev 4.
+Proof.
+  apply ev_SS.
+  apply ev_SS.
+  apply ev_O.
+
+Definition four_ev: ev 4 :=
+  ev_SS 2 (ev_SS 0 ev_O).
