@@ -97,6 +97,17 @@ Inductive ok_day:day->Prop:=
     day_before d2 d1 ->
     ok_day d1.
 
+(* ok_day saturday *)
+Check okd_gd saturday gd_sat.
+
+(* ok_day saturday -> day_before saturday friday
+                   -> ok_day friday *)
+Check okd_before friday saturday.
+
+(* ok_day friday -> day_before friday thursday
+                 -> ok_day thursday *)
+Check okd_before thursday friday.
+
 Definition okdw:ok_day wednesday:=
   okd_before wednesday thursday
     (okd_before thursday friday
