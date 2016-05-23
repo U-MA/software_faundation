@@ -197,7 +197,34 @@ Check rgb_ind.
 Inductive natlist:Type:=
 |nnil:natlist
 |ncons:nat->natlist->natlist.
-Check natlist.
+Check natlist_ind.
+
+Inductive natlist1:Type:=
+|nnil1:natlist1
+|nsnoc1:natlist1->nat->natlist1.
+Check natlist1_ind.
+
+Inductive ExSet:Type:=
+|con1:bool->ExSet
+|con2:nat->ExSet->ExSet.
+
+Check ExSet_ind.
+
+Inductive list(X:Type):Type:=
+|nil:list X
+|cons:X -> list X -> list X.
+Check list_ind.
+
+Inductive tree(X:Type):Type:=
+|leaf:X -> tree X
+|node:tree X -> tree X -> tree X.
+Check tree_ind.
+
+Inductive mytype(X:Type):Type:=
+|constr1:X -> mytype X
+|constr2:nat -> mytype X
+|constr3:mytype X -> nat -> mytype X.
+Check mytype_ind.
 
 Definition P_mOr(n:nat):Prop:=
   n * 0 = 0.
