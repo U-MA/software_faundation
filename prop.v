@@ -226,6 +226,17 @@ Inductive mytype(X:Type):Type:=
 |constr3:mytype X -> nat -> mytype X.
 Check mytype_ind.
 
+Inductive foo(X Y:Type):Type:=
+|bar: X -> foo X Y
+|baz: Y -> foo X Y
+|quux: (nat -> foo X Y) -> nat -> foo X Y.
+Check foo_ind.
+
+Inductive foo'(X:Type):Type:=
+|C1:list X -> foo' X -> foo' X
+|C2:foo' X.
+Check foo'_ind.
+
 Definition P_mOr(n:nat):Prop:=
   n * 0 = 0.
 
@@ -258,3 +269,14 @@ Proof.
 
 Definition four_ev: ev 4 :=
   ev_SS 2 (ev_SS 0 ev_O).
+
+Definition ev_plus4:forall n, ev n -> ev (4 + n):=
+  fun (n:nat)(H:ev n) => ev_SS (S (S n)) (ev_SS n H).
+
+Theorem ev_plus4':forall n,
+  ev n -> ev (4 + n).
+Proof.
+  intros n H.
+  apply ev_SS.
+  apply ev_SS.
+  apply H. Qed.
