@@ -273,6 +273,8 @@ Definition four_ev: ev 4 :=
 Definition ev_plus4:forall n, ev n -> ev (4 + n):=
   fun (n:nat)(H:ev n) => ev_SS (S (S n)) (ev_SS n H).
 
+Print ev_plus4.
+
 Theorem ev_plus4':forall n,
   ev n -> ev (4 + n).
 Proof.
@@ -280,3 +282,52 @@ Proof.
   apply ev_SS.
   apply ev_SS.
   apply H. Qed.
+
+Theorem double_even:forall n,
+  ev (double n).
+Proof.
+  induction n as [|n'].
+  (* Case "n = 0". *)
+    apply ev_O.
+  (* Case "n = n'". *)
+    simpl.
+    apply ev_SS.
+    apply IHn'. Qed.
+Print double_even.
+
+Theorem ev_minus2:forall n,
+  ev n -> ev (pred (pred n)).
+Proof.
+  intros n E.
+  destruct E as [|n' E'].
+  Case "E = ev_O".
+    simpl.
+    apply ev_O.
+  Case "E = ev_SS n' E'".
+    simpl.
+    apply E'. Qed.
+
+Theorem ev_minus2_n:forall n,
+  ev n -> ev (pred (pred n)).
+Proof.
+  intros n E.
+  destruct n as [|n'].
+  Case "n = 0".
+    simpl.
+    apply ev_O.
+  Case "n = S n'".
+    simpl.
+Admitted.
+(* たぶん、無理 *)
+
+Theorem ev_even:forall n,
+  ev n -> even n.
+Proof.
+  intros n E.
+  induction E as [|n' E'].
+  Case "E = ev_O".
+    unfold even.
+    reflexivity.
+  Case "E = ev_SS n' E'".
+    unfold even.
+    apply IHE'. Qed.
