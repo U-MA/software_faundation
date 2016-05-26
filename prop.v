@@ -331,3 +331,55 @@ Proof.
   Case "E = ev_SS n' E'".
     unfold even.
     apply IHE'. Qed.
+
+Theorem ev_even_n:forall n,
+  ev n -> even n.
+Proof.
+  intros n E.
+  induction n as [|n'].
+  Case "n = 0".
+    reflexivity.
+  Case "n = S n'".
+    destruct n' as [|n''].
+    SCase "n' = 0".
+      inversion E.
+    SCase "n' = S n''".
+      inversion E.
+      unfold even.
+      simpl.
+Admitted.
+
+Theorem SSev_ev:forall n,
+  ev (S (S n)) -> ev n.
+Proof.
+  intros n E.
+  inversion E as [|n' E'].
+  apply E'. Qed.
+
+Theorem SSSSev_even:forall n,
+  ev (S (S (S (S n)))) -> ev n.
+Proof.
+  intros n E.
+  inversion E as [|n' E'].
+  inversion E' as [|n'' E''].
+  apply E''. Qed.
+
+Theorem even5_nonsense:
+  ev 5 -> 2 + 2 = 9.
+Proof.
+  intros H.
+  inversion H as [|n' H'].
+  inversion H' as [|n'' H''].
+  inversion H''. Qed.
+
+Theorem ev_minus2':forall n,
+  ev n -> ev (pred (pred n)).
+Proof.
+  intros n E.
+  inversion E as [|n' E'].
+  (* E = ev_O *)
+    simpl.
+    apply ev_O.
+  (* E = ev_SS n' E' *)
+    simpl.
+    apply E'. Qed.
