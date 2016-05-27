@@ -402,3 +402,20 @@ Proof.
       rewrite -> H8.
       apply MyProp2.
       apply MyProp1. Qed.
+
+Theorem MyProp_0:MyProp 0.
+Proof.
+  apply MyProp3.
+  simpl.
+  apply MyProp3.
+  simpl.
+  apply MyProp1. Qed.
+
+Theorem MyProp_plustwo:
+  forall n:nat, MyProp n -> MyProp (S (S n)).
+Proof.
+  intros n H.
+  apply MyProp3.
+  simpl.
+  apply MyProp2.
+  apply H. Qed.
