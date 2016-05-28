@@ -419,3 +419,24 @@ Proof.
   simpl.
   apply MyProp2.
   apply H. Qed.
+
+Theorem MyProp_ev:forall n:nat,
+  ev n -> MyProp n.
+Proof.
+  intros n E.
+  induction E as [|n' E'].
+  Case "E = ev_0".
+    apply MyProp_0.
+  Case "E = ev_SS n' E'".
+    apply MyProp_plustwo.
+    apply IHE'. Qed.
+
+Theorem ev_MyProp:forall n:nat,
+  MyProp n -> ev n.
+Proof.
+  intros n E.
+  induction n as [|n'].
+  Case "n = 0".
+    apply ev_O.
+  Case "n = S n'".
+Admitted.
