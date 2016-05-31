@@ -84,3 +84,55 @@ Proof.
   inversion IHn'.
   apply H0.
   apply H. Qed.
+
+Definition conj_fact : forall P Q R,
+  P /\ Q -> Q /\ R -> P /\ R :=
+  (fun (P Q R : Prop) =>
+    (fun (H0 : and P Q) =>
+      (fun (H1 : and Q R) =>
+        conj P R (proj1 P Q H0) (proj2 Q R H1)))).
+
+Definition iff (P Q : Prop) := (P -> Q) /\ (Q -> P).
+
+Notation "P <-> Q" := (iff P Q)
+  (at level 95, no associativity) : type_scope.
+
+Theorem iff_implies : forall P Q : Prop,
+  (P <-> Q) -> P -> Q.
+Proof.
+  intros P Q H H'.
+  apply H.
+  apply H'. Qed.
+
+Theorem iff_sym : forall P Q : Prop,
+  (P <-> Q) -> (Q <-> P).
+Proof.
+  intros P Q H.
+  inversion H.
+  split.
+  apply H1.
+  apply H0. Qed.
+
+Theorem iff_refl : forall P : Prop,
+  P <-> P.
+Proof.
+  intros P.
+  split.
+  intros H.
+  apply H.
+  intros H.
+  apply H. Qed.
+
+Theorem iff_trans : forall P Q R : Prop,
+  (P <-> Q) -> (Q <-> R) -> (P <-> R).
+Proof.
+  intros P Q R H0 H1.
+  split.
+  intros P'.
+  apply H1.
+  apply H0.
+  apply P'.
+  intros R'.
+  apply H0.
+  apply H1.
+  apply R'. Qed.
