@@ -272,3 +272,92 @@ Proof.
   destruct c.
   inversion H.
   reflexivity. Qed.
+
+Inductive False : Prop := .
+
+Theorem False_implies_nonsense:
+  False -> 2 + 2 = 5.
+Proof.
+  intros contra.
+  inversion contra. Qed.
+
+Theorem nonsense_implies_False:
+  2 + 2 = 5 -> False.
+Proof.
+  intros contra.
+  inversion contra. Qed.
+
+Theorem ex_falso_quodlibet : forall P : Prop,
+  False -> P.
+Proof.
+  intros P contra.
+  inversion contra. Qed.
+
+Inductive True : Prop :=
+|T : True.
+
+Definition not (P : Prop) := P -> False.
+
+Notation "~ x" := (not x) : type_scope.
+
+Theorem not_False:
+  ~ False.
+Proof.
+  unfold not.
+  intros H.
+  inversion H. Qed.
+
+Theorem contradiction_implies_anything : forall P Q : Prop,
+  (P /\ ~ P) -> Q.
+Proof.
+  intros P Q H.
+  inversion H as [HP HNA].
+  unfold not in HNA.
+  apply HNA in HP.
+  inversion HP. Qed.
+
+Theorem double_neg : forall P : Prop,
+  P -> ~~P.
+Proof.
+  intros P H.
+  unfold not.
+  intros G.
+  apply G.
+  apply H. Qed.
+
+Theorem not_both_true_and_false : forall P : Prop,
+  ~ (P /\ ~ P).
+Proof.
+  unfold not.
+  intros P H.
+  inversion H.
+  apply H1 in H0.
+  apply H0. Qed.
+
+Theorem five_not_even : ~ ev 5.
+Proof.
+  unfold not.
+  intros Hev5.
+  inversion Hev5.
+  inversion H0.
+  inversion H2. Qed.
+
+Theorem ev_not_ev_S : forall n,
+  ev n -> ~ ev (S n).
+Proof.
+  unfold not.
+  intros n H.
+  induction H.
+  intros H.
+  inversion H.
+  intros H'.
+  inversion H'.
+  apply IHev in H1.
+  apply H1. Qed.
+
+Theorem classic_double_neg : forall P : Prop,
+  ~~P -> P.
+Proof.
+  intros P H.
+  unfold not in H.
+Admitted.
