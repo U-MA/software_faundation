@@ -361,3 +361,35 @@ Proof.
   intros P H.
   unfold not in H.
 Admitted.
+
+Notation "x <> y" := (~ (x = y)) : type_scope.
+
+Theorem not_false_then_true : forall b : bool,
+  b <> false -> b = true.
+Proof.
+  intros b H.
+  destruct b.
+  reflexivity.
+  unfold not in H.
+  apply ex_falso_quodlibet.
+  apply H.
+  reflexivity. Qed.
+
+Theorem not_eq_beq_false : forall n n' : nat,
+  n <> n' -> beq_nat n n' = false.
+Proof.
+  Admitted.
+
+Theorem beq_false_not_eq : forall n m,
+  false = beq_nat n m -> n <> m.
+Proof.
+  Admitted.
+
+Inductive ex (X:Type) (P:X->Prop):Prop:=
+  ex_intro:forall(witness:X), P witness -> ex X P.
+
+Definition some_nat_is_even : Prop :=
+  ex nat ev.
+
+Definition snie : some_nat_is_even :=
+  ex_intro _ ev 4 (ev_SS 2 (ev_SS 0 ev_0)).
