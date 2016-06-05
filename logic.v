@@ -393,3 +393,160 @@ Definition some_nat_is_even : Prop :=
 
 Definition snie : some_nat_is_even :=
   ex_intro _ ev 4 (ev_SS 2 (ev_SS 0 ev_0)).
+
+Notation "'exists' x , p" := (ex _ (fun x => p))
+  (at level 200, x ident, right associativity) : type_scope.
+
+Notation "'exists' x : X , p" := (ex _ (fun x:X => p))
+  (at level 200, x ident, right associativity) : type_scope.
+
+Example exists_example_1 : exists n, n + (n * n) = 6.
+Proof.
+  apply ex_intro with (witness := 2).
+  reflexivity. Qed.
+
+Example exists_example_1' : exists n,
+  n + (n * n) = 6.
+Proof.
+  exists 2.
+  reflexivity. Qed.
+
+Theorem exists_example_2 : forall n,
+  (exists m, n = 4 + m) ->
+  (exists o, n = 2 + o).
+Proof.
+  intros n H.
+  inversion H as [m Hm].
+  exists (2 + m).
+  apply Hm. Qed.
+
+Theorem dist_not_exists : forall (X:Type) (P:X->Prop),
+  (forall x, P x) -> ~ (exists x, ~ P x).
+Proof.
+  intros X P PH NH.
+  inversion NH as [x NP].
+  apply NP.
+  apply PH. Qed.
+
+Module MyEqualilty.
+
+Inductive eq (X:Type):X->X->Prop:=
+  refl_equal:forall x, eq X x x.
+
+Notation "x = y" := (eq _ x y)
+  (at level 70, no associativity) : type_scope.
+
+Inductive eq' (X:Type) (x:X) : X -> Prop :=
+  refl_equal' : eq' X x x.
+
+Notation "x =' y" := (eq' _ x y)
+  (at level 70, no associativity) : type_scope.
+
+Theorem two_defs_of_eq_coincide : forall (X:Type) (x y:X),
+  x = y <-> x =' y.
+Proof.
+  intros.
+  split.
+  intros H.
+  inversion H as [x' y' T].
+  apply refl_equal'.
+  intros H.
+  inversion H as [T].
+  apply refl_equal. Qed.
+
+Definition four : 2 + 2 = 1 + 3 :=
+  refl_equal nat 4.
+Definition singleton : forall (X:Set) (x:X), []++[x] = x::[] :=
+  fun (X:Set) (x:X) => refl_equal (list X) [x].
+
+End MyEqualilty.
+
+Module LeFirstTry.
+
+Inductive le : nat -> nat -> Prop :=
+|le_n : forall n, le n n
+|le_S : forall n m, (le n m) -> (le n (S m)).
+
+End LeFirstTry.
+
+Inductive le (n : nat) : nat -> Prop :=
+|le_n : le n n
+|le_S : forall m, (le n m) -> (le n (S m)).
+
+Notation "m <= n" := (le m n).
+
+Theorem test_le1 : 3 <= 3.
+Proof.
+  apply le_n. Qed.
+
+Theorem test_le2 :
+  3 <= 6.
+Proof.
+  apply le_S.
+  apply le_S.
+  apply le_S.
+  apply le_n. Qed.
+
+Theorem test_le3 :
+  ~ (2 <= 1).
+Proof.
+  intros H.
+  inversion H.
+  inversion H1. Qed.
+
+Definition lt (n m : nat) := le (S n) m.
+
+Notation "m < n" := (lt m n).
+
+Inductive square_of : nat -> nat -> Prop :=
+  sq : forall n : nat, square_of n (n * n).
+
+Inductive next_nat (n : nat) : nat -> Prop :=
+|nn : next_nat n (S n).
+
+Inductive next_even (n : nat) : nat -> Prop :=
+|ne_1 : ev (S n) -> next_even n (S n)
+|ne_2 : ev (S (S n)) -> next_even n (S (S n)).
+
+Theorem O_le_n : forall n,
+  O <= n.
+Proof.
+  intros n.
+  induction n as [|n'].
+  Case "n = 0".
+    apply le_n.
+  Case "n = S n'".
+    apply le_S.
+    apply IHn'. Qed.
+
+Theorem n_le_m__Sn_le_Sm : forall n m,
+  n <= m -> S n <= S m.
+Proof.
+  intros n m H.
+  induction H.
+    apply le_n.
+    apply le_S.
+    apply IHle. Qed.
+
+Theorem Sn_le_Sm__n_le_m : forall n m,
+  S n <= S m -> n <= m.
+Proof.
+  intros n m.
+  generalize dependent n.
+  induction m.
+  Case "m = 0".
+  intros n H.
+  inversion H as [eq|m' L].
+    apply le_n.
+    inversion L.
+  intros n H.
+Admitted.
+
+Theorem le_plus_l : forall a b,
+  a <= a + b.
+Proof.
+  intros a b.
+  induction a as [|a'].
+    simpl.
+    apply O_le_n.
+Admitted.
