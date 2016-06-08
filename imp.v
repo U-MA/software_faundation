@@ -300,3 +300,79 @@ Proof.
       try apply IHa1;
       try apply IHa2;
       reflexivity. Qed.
+End AExp.
+
+Module Id.
+
+Inductive id : Type :=
+  Id : nat -> id.
+
+Definition beq_id X1 X2 :=
+  match (X1, X2) with
+    (Id n1, Id n2) => beq_nat n1 n2
+  end.
+
+Theorem beq_id_refl : forall X,
+  true = beq_id X X.
+Proof.
+  intros.
+  destruct X.
+  apply beq_nat_refl. Qed.
+
+Theorem beq_id_eq : forall i1 i2,
+  true = beq_id i1 i2 -> i1 = i2.
+Proof.
+  intros i1 i2 H.
+  destruct i1.
+  destruct i2.
+  unfold beq_id in H.
+  apply beq_nat_eq in H.
+  rewrite -> H.
+  reflexivity. Qed.
+
+Theorem beq_id_false_not_eq : forall i1 i2,
+  beq_id i1 i2 = false -> i1 <> i2.
+Proof.
+  intros i1 i2 H.
+  destruct i1.
+  destruct i2.
+  unfold beq_id in H.
+  apply beq_nat_false in H.
+  intro eq.
+  apply H.
+  inversion eq as [ID].
+  reflexivity. Qed.
+
+Theorem not_eq_id_false : forall i1 i2,
+  i1 <> i2 -> beq_id i1 i2 = false.
+Proof.
+  intros.
+  destruct i1.
+  destruct i2.
+  unfold beq_id.
+  apply not_eq_beq_false.
+  intro eq.
+  apply H.
+  inversion eq.
+  reflexivity. Qed.
+
+Theorem beq_id_sym : forall i1 i2,
+  beq_id i1 i2 = beq_id i2 i1.
+Proof.
+Admitted.
+
+Definition state := id -> nat.
+
+Definition empty_state : state :=
+  fun _ => O.
+
+Definition update (st:state) (X:id) (n:nat) : state :=
+  fun X' => if beq_id X X' then n else st X'.
+
+Theorem update_eq : forall n X st,
+  (update st X n) X = n.
+Proof.
+  intros.
+  unfold update.
+  rewrite <- (beq_id_refl X).
+  reflexivity. Qed.
