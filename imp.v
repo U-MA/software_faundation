@@ -376,3 +376,25 @@ Proof.
   unfold update.
   rewrite <- (beq_id_refl X).
   reflexivity. Qed.
+
+Theorem update_neq : forall V2 V1 n st,
+  beq_id V2 V1 = false ->
+  (update st V2 n) V1 = (st V1).
+Proof.
+  intros.
+  unfold update.
+  rewrite -> H.
+  reflexivity. Qed.
+
+Theorem update_example : forall (n:nat),
+  (update empty_state (Id 2) n) (Id 3) = O.
+Proof.
+  unfold update.
+  intros n.
+  simpl.
+  unfold empty_state.
+  reflexivity. Qed.
+
+Theorem update_shadow : forall x1 x2 k1 k2 (f:state),
+  (update (update f k2 x1) k2 x2) k1 = (update f k2 x2) k1.
+Proof.
