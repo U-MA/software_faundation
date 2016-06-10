@@ -398,3 +398,114 @@ Proof.
 Theorem update_shadow : forall x1 x2 k1 k2 (f:state),
   (update (update f k2 x1) k2 x2) k1 = (update f k2 x2) k1.
 Proof.
+  intros.
+  unfold update.
+Admitted.
+
+Theorem update_same : forall x1 k1 k2 (f:state),
+  f k1 = x1 ->
+  (update f k1 x1) k2 = f k2.
+Proof.
+  intros.
+  unfold update.
+Admitted.
+
+Theorem update_permute : forall x1 x2 k1 k2 k3 f,
+  beq_id k2 k1 = false ->
+  (update (update f k2 x1) k1 x2) k3 =
+  (update (update f k1 x2) k2 x1) k3.
+Proof.
+  intros.
+Admitted.
+
+Inductive aexp : Type :=
+|ANum : nat -> aexp
+|AId : id -> aexp
+|APlus : aexp -> aexp -> aexp
+|AMinus : aexp -> aexp -> aexp
+|AMult : aexp -> aexp -> aexp.
+
+Tactic Notation "aexp_cases" tactic(first) ident(c) :=
+  first;
+  [Case_aux c "Anum" | Case_aux c "AId" | Case_aux c "APlus"
+  |Case_aux c "AMinus" | Case_aux c "AMult" ].
+
+Definition X : id := Id 0.
+Definition Y : id := Id 1.
+Definition Z : id := Id 2.
+
+Inductive bexp : Type :=
+|BTrue : bexp
+|BFalse : bexp
+|BEq : aexp -> aexp -> bexp
+|BLe : aexp -> aexp -> bexp
+|BNot : bexp -> bexp
+|BAnd : bexp -> bexp -> bexp.
+
+Tactic Notation "bexp_cases" tactic(first) ident(c) :=
+  first;
+  [Case_aux c "BTrue" | Case_aux c "BFalse" | Case_aux c "BEq"
+  |Case_aux c "BLe" | Case_aux c "BNot" | Case_aux c "BAnd" ].
+
+Fixpoint aeval (st:state) (e:aexp) : nat :=
+  match e with
+  |ANum n => n
+  |AId X => st X
+  |APlus a1 a2 => (aeval st a1) + (aeval st a2)
+  |AMinus a1 a2 => (aeval st a1) - (aeval st a2)
+  |AMult a1 a2 => (aeval st a1) * (aeval st a2)
+  end.
+
+Fixpoint beval (st:state) (e:bexp) : bool :=
+  match e with
+  |BTrue => true
+  |BFalse => false
+  |BEq a1 a2 => beq_nat (aeval st a1) (aeval st a2)
+  |BLe a1 a2 => ble_nat (aeval st a1) (aeval st a2)
+  |BNot b1 => negb (beval st b1)
+  |BAnd b1 b2 => andb (beval st b1) (beval st b2)
+  end.
+
+Example aexp1 :
+  aeval (update empty_state X 5)
+    (APlus (ANum 3) (AMult (AId X) (ANum 2)))
+  = 13.
+Proof.
+  reflexivity. Qed.
+
+Example bexp1 :
+  beval (update empty_state X 5)
+    (BAnd BTrue (BNot (BLe (AId X) (ANum 4))))
+  = true.
+Proof.
+  reflexivity. Qed.
+
+Inductive com : Type :=
+|CSkip : com
+|CAss : id -> aexp -> com
+|CSeq : com -> com -> com
+|CIf : bexp -> com -> com -> com
+|CWhile : bexp -> com -> com.
+
+Tactic Notation "com_cases" tactic(first) ident(c) :=
+  first;
+  [Case_aux c "SKIP" | Case_aux c "::=" | Case_aux c ";"
+  |Case_aux c "IFB" | Case_aux c "WHILE" ].
+
+Notation "'SKIP'" := CSkip.
+Notation "X '::=' a" :=
+  (CAss X a) (at level 60).
+Notation "c1 ; c2" :=
+  (CSeq c1 c2) (at level 80, right associativity).
+Notation "'WHILE' b 'DO' c 'END'" :=
+  (CWhile b c) (at level 80, right associativity).
+Notation "'IFB' e1 'THEN' e2 'ELSE' e3 'FI'" :=
+  (CIf e1 e2 e3) (at level 80, right associativity).
+
+Definition fact_in_coq : com :=
+  Z ::= AId X;
+  Y ::= ANum 1;
+  WHILE BNot (BEq (AId Z) (ANum 0)) DO
+    Y ::= AMult (AId Y) (AId Z);
+    Z ::= AMinus (AId Z) (ANum 1)
+  END.
