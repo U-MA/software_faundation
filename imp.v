@@ -509,3 +509,83 @@ Definition fact_in_coq : com :=
     Y ::= AMult (AId Y) (AId Z);
     Z ::= AMinus (AId Z) (ANum 1)
   END.
+
+Definition plus2 : com :=
+  X ::= (APlus (AId X) (ANum 2)).
+
+Definition XtimesYinZ : com :=
+  Z ::= (AMult (AId X) (AId Y)).
+
+Definition subtract_slowly_body : com :=
+  Z ::= AMinus (AId Z) (ANum 1);
+  X ::= AMinus (AId X) (ANum 1).
+
+Definition subtract_slowly : com :=
+  WHILE BNot (BEq (AId X) (ANum 0)) DO
+    subtract_slowly_body
+  END.
+
+Definition subtract_3_from_5_slowly : com :=
+  X ::= ANum 3;
+  Z ::= ANum 5;
+  subtract_slowly.
+
+Definition loop : com :=
+  WHILE BTrue DO
+    SKIP
+  END.
+
+Definition fact_body : com :=
+  Y ::= AMult (AId Y) (AId Z);
+  Z ::= AMinus (AId Z) (ANum 1).
+
+Definition fact_loop : com :=
+  WHILE BNot (BEq (AId Z) (ANum O)) DO
+    fact_body
+  END.
+
+Definition fact_com : com :=
+  Z ::= AId X;
+  Y ::= ANum 1;
+  fact_loop.
+
+Fixpoint ceval_step1 (st:state) (c:com) : state :=
+  match c with
+  |SKIP =>
+      st
+  |l ::= a1 =>
+      update st l (aeval st a1)
+  |c1 ; c2 =>
+      let st' := ceval_step1 st c1 in
+      ceval_step1 st' c2
+  |IFB b THEN c1 ELSE c2 FI =>
+      if (beval st b)
+        then ceval_step1 st c1
+        else ceval_step1 st c2
+  |WHILE b1 DO c1 END =>
+      st
+  end.
+
+Fixpoint ceval_step2 (st:state) (c:com) (i:nat) : state :=
+  match i with
+  |O => empty_state
+  |S i' =>
+      match c with
+      |SKIP =>
+          st
+      |l ::= a1 =>
+          update st l (aeval st a1)
+      |c1 ; c2 =>
+          let st' := ceval_step2 st c1 i' in
+          ceval_step2 st' c2 i'
+      |IFB b THEN c1 ELSE c2 FI =>
+          if (beval st b)
+            then ceval_step2 st c1 i'
+            else ceval_step2 st c2 i'
+      |WHILE b1 DO c1 END =>
+          if (beval st b1)
+            then let st' := ceval_step2 st c1 i' in
+              ceval_step2 st' c i'
+            else st
+      end
+  end.
