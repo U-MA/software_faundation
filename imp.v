@@ -30,6 +30,11 @@ Example test_aeval1 :
 Proof.
   reflexivity. Qed.
 
+Example test_aeval2 :
+  aeval (AMult (APlus (ANum 4) (AMult (ANum 2) (ANum 4))) (ANum 4)) = 48.
+Proof.
+  reflexivity. Qed.
+
 Fixpoint beval (e: bexp) : bool :=
   match e with
   |BTrue => true
@@ -64,16 +69,17 @@ Theorem optimize_Oplus_sound : forall e,
 Proof.
   intros e.
   induction e.
-  Case "ANum".
+  Case "e = ANum n".
+    simpl.
     reflexivity.
-  Case "APlus".
+  Case "e = APlus e1 e2".
     destruct e1.
-    SCase "e1 = ANum n".
+    SCase "e1 = Anum n".
       destruct n.
       SSCase "n = 0".
         simpl.
         apply IHe2.
-      SSCase "n <> 0".
+      SSCase "n = S n".
         simpl.
         rewrite IHe2.
         reflexivity.
@@ -95,17 +101,18 @@ Proof.
       rewrite IHe1.
       rewrite IHe2.
       reflexivity.
-  Case "AMinus".
+  Case "e = AMinus e1 e2".
     simpl.
     rewrite IHe1.
     rewrite IHe2.
     reflexivity.
-  Case "AMult".
+  Case "e = AMult e1 e2".
     simpl.
     rewrite IHe1.
     rewrite IHe2.
     reflexivity. Qed.
 
+(* ;タクティカル *)
 Lemma foo : forall n, ble_nat O n = true.
 Proof.
   intros.
@@ -125,19 +132,18 @@ Proof.
 Theorem optimize_Oplus_sound' : forall e,
   aeval (optimize_Oplus e) = aeval e.
 Proof.
-  intros e.
+  intros.
   induction e;
   try (simpl; rewrite IHe1; rewrite IHe2; reflexivity).
   Case "ANum".
     reflexivity.
   Case "APlus".
     destruct e1;
-    try (simpl; simpl in IHe1; rewrite IHe1; rewrite IHe2; reflexivity).
-  SCase "e1 = ANum n".
-    destruct n;
-    simpl;
-    rewrite IHe2;
-    reflexivity. Qed.
+    try (simpl; simpl in IHe1;
+      rewrite IHe1; rewrite IHe2; reflexivity).
+    SCase "e1 = ANum n".
+      destruct n;
+      simpl; rewrite IHe2; reflexivity. Qed.
 
 Theorem optimize_Oplus_sound'' : forall e,
   aeval (optimize_Oplus e) = aeval e.
@@ -152,9 +158,7 @@ Proof.
       rewrite IHe2; reflexivity).
     SCase "e1 = ANum n".
       destruct n;
-      simpl;
-      rewrite IHe2;
-      reflexivity. Qed.
+      simpl; rewrite IHe2; reflexivity. Qed.
 
 Tactic Notation "simpl_and_try" tactic(c) :=
   simpl;
