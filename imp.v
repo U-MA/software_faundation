@@ -174,25 +174,15 @@ Theorem optimize_Oplus_sound''' : forall e,
 Proof.
   intros e.
   aexp_cases (induction e) Case;
-    try (
-      simpl;
-      rewrite IHe1;
-      rewrite IHe2;
-      reflexivity);
-    try reflexivity.
+  try (simpl; rewrite IHe1; rewrite IHe2; reflexivity);
+  try reflexivity.
   Case "APlus".
     aexp_cases (destruct e1) SCase;
-      try(
-      simpl;
-      simpl in IHe1;
-      rewrite IHe1;
-      rewrite IHe2;
-      reflexivity).
+    try (simpl; simpl in IHe1;
+      rewrite IHe1; rewrite IHe2; reflexivity).
     SCase "ANum".
       destruct n;
-      simpl;
-      rewrite IHe2;
-      reflexivity. Qed.
+      simpl; rewrite IHe2; reflexivity. Qed.
 
 Example silly_presburger_example : forall m n o p,
   m + n <= n + o /\ o + 3 = p + 3 ->
