@@ -650,3 +650,62 @@ Definition test_ceval (st:state) (c:com) :=
   | None => None
   | Some st => Some (st X, st Y, st Z)
   end.
+
+Reserved Notation "c1 '/' st '||' st'"
+    (at level 40, st at level 39).
+
+Inductive ceval : com -> state -> state -> Prop :=
+| E_Skip : forall st,
+    SKIP / st || st
+| E_Ass : forall st a1 n l,
+    aeval st a1 = n ->
+    (l ::= a1) / st || (update st l n)
+| E_Seq : forall c1 c2 st st' st'',
+    c1 / st || st' ->
+    c2 / st' || st'' ->
+    (c1 ; c2) / st || st''
+| E_IfTrue : forall st st' b1 c1 c2,
+    beval st b1 = true ->
+    c1 / st || st' ->
+    (IFB b1 THEN c1 ELSE c2 FI) / st || st'
+| E_IfFalse : forall st st' b1 c1 c2,
+    beval st b1 = false ->
+    c2 / st || st' ->
+    (IFB b1 THEN c1 ELSE c2 FI) / st || st'
+| E_WhileEnd : forall b1 st c1,
+    beval st b1 = false ->
+    (WHILE b1 DO c1 END) / st || st
+| E_WhileLoop : forall st st' st'' b1 c1,
+    beval st b1 = true ->
+    c1 / st || st' ->
+    (WHILE b1 DO c1 END) / st' || st'' ->
+    (WHILE b1 DO c1 END) /st || st''
+
+where "c1 '/' st '||' st'" := (ceval c1 st st').
+
+Tactic Notation "ceval_cases" tactic(first) ident(c) :=
+  first;
+  [ Case_aux c "E_Skip" | Case_aux c "E_Ass"
+  | Case_aux c "E_Seq"  | Case_aux c "E_IfTrue"
+  | Case_aux c "E_IfFalse" | Case_aux c "E_WhileEnd"
+  | Case_aux c "E_WhileLoop" ].
+
+Example ceval_example1 :
+  (X ::= ANum 2;
+  IFB BLe (AId X) (ANum 1)
+    THEN Y ::= ANum 3
+    ELSE Z ::= ANum 4
+  FI)
+  / empty_state
+  || (update (update empty_state X 2) Z 4).
+Proof.
+  apply E_Seq with (update empty_state X 2).
+  Case "assignment command".
+    apply E_Ass.
+    reflexivity.
+  Case "if command".
+    apply E_IfFalse.
+    reflexivity.
+    apply E_Ass.
+    reflexivity.
+Qed.
