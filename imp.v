@@ -294,6 +294,30 @@ Proof.
       try apply IHa1;
       try apply IHa2;
       reflexivity. Qed.
+
+Inductive bevalR : bexp -> bool -> Prop :=
+| E_BTrue : bevalR BTrue true
+| E_BFalse : bevalR BFalse false
+| E_BEq : forall (e1 e2:aexp) (b:bool),
+    bevalR (BEq e1 e2) b
+| E_BLe : forall (e1 e2:aexp) (b:bool),
+    bevalR (BLe e1 e2) b
+| E_BNot : forall (e1:bexp) (b:bool),
+    bevalR (BNot e1) b
+| E_BAnd : forall (e1 e2:bexp) (b:bool),
+    bevalR (BAnd e1 e2) b.
+
+Tactic Notation "bevalR_cases" tactic(first) ident(c) :=
+  first;
+  [ Case_aux c "E_BTrue" | Case_aux c "E_BFalse"
+  | Case_aux c "E_BEq"   | Case_aux c "E_BLe"
+  | Case_aux c "E_BNot"  | Case_aux c "E_BAnd" ].
+
+Theorem beval_iff_bevalR : forall e b,
+  bevalR e b <-> beval e = b.
+Proof.
+  Admitted.
+
 End AExp.
 
 Module Id.
@@ -709,3 +733,79 @@ Proof.
     apply E_Ass.
     reflexivity.
 Qed.
+
+Theorem ceval_step__ceval : forall c st st',
+  (exists i, ceval_step st c i = Some st') ->
+  c / st || st'.
+Proof.
+  intros c st st' H.
+  inversion H as [i E].
+  clear H.
+  generalize dependent st'.
+  generalize dependent st.
+  generalize dependent c.
+  induction i as [|i'].
+  Case "i = 0 -- contradictionary".
+    intros c st st' H.
+    inversion H.
+  Case "i = S i'".
+    intros c st st' H.
+    com_cases (destruct c) SCase;
+      simpl in H; inversion H; subst; clear H.
+    SCase "SKIP".
+      apply E_Skip.
+    SCase "::=".
+      apply E_Ass.
+      reflexivity.
+    SCase ";".
+      remember (ceval_step st c1 i') as r1.
+      destruct r1.
+      SSCase "Evaluation of r1 terminates normally".
+        apply E_Seq with s.
+        apply IHi'.
+        rewrite Heqr1.
+        reflexivity.
+        apply IHi'.
+        simpl in H1.
+        assumption.
+      SSCase "Otherwise -- contradiction".
+        inversion H1.
+    SCase "IFB".
+      remember (beval st b) as r.
+      destruct r.
+      SSCase "r = true".
+        apply E_IfTrue.
+        rewrite Heqr.
+        reflexivity.
+        apply IHi'.
+        assumption.
+      SSCase "r = false".
+        apply E_IfFalse.
+        rewrite Heqr.
+        reflexivity.
+        apply IHi'.
+        assumption.
+    SCase "WHILE".
+      remember (beval st b) as r.
+      destruct r.
+      SSCase "r = true".
+        remember (ceval_step st c i') as r1.
+        destruct r1.
+        SSSCase "r1 = Some s".
+          apply E_WhileLoop with s.
+          rewrite Heqr.
+          reflexivity.
+          apply IHi'.
+          rewrite Heqr1.
+          reflexivity.
+          apply IHi'.
+          simpl in H1.
+          assumption.
+        SSSCase "r1 = None".
+          inversion H1.
+      SSCase "r = false".
+        inversion H1.
+        apply E_WhileEnd.
+        rewrite Heqr.
+        subst.
+        reflexivity. Qed.
