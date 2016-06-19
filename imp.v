@@ -74,12 +74,12 @@ Proof.
     reflexivity.
   Case "e = APlus e1 e2".
     destruct e1.
-    SCase "e1 = Anum n".
-      destruct n.
+    SCase "e1 = ANum n".
+      induction n.
       SSCase "n = 0".
         simpl.
         apply IHe2.
-      SSCase "n = S n".
+      SSCase "n <> 0".
         simpl.
         rewrite IHe2.
         reflexivity.
@@ -111,6 +111,7 @@ Proof.
     rewrite IHe1.
     rewrite IHe2.
     reflexivity. Qed.
+
 
 (* ;タクティカル *)
 Lemma foo : forall n, ble_nat O n = true.
@@ -184,6 +185,62 @@ Proof.
       destruct n;
       simpl; rewrite IHe2; reflexivity. Qed.
 
+Tactic Notation "bexp_cases" tactic(first) ident(c) :=
+  first;
+  [ Case_aux c "BTrue" | Case_aux c "BFalse"
+  | Case_aux c "BEq"   | Case_aux c "BLe"
+  | Case_aux c "BNot"  | Case_aux c "BAnd" ].
+
+Fixpoint optimize_Oplus_b (e : bexp) : bexp :=
+  match e with
+  | BTrue => BTrue
+  | BFalse => BFalse
+  | BEq a1 a2 =>
+      BEq (optimize_Oplus a1)
+          (optimize_Oplus a2)
+  | BLe a1 a2 =>
+      BLe (optimize_Oplus a1)
+          (optimize_Oplus a2)
+  | BNot b1 => BNot b1
+  | BAnd b1 b2 => BAnd b1 b2
+  end.
+
+Theorem optimize_Oplus_b_sound : forall e,
+  beval (optimize_Oplus_b e) = beval e.
+Proof.
+  intros e.
+  induction e.
+  Case "e = BTrue".
+    simpl.  reflexivity.
+  Case "e = BFalse".
+    simpl.  reflexivity.
+  Case "e = BEq".
+    simpl.
+    rewrite optimize_Oplus_sound.
+    rewrite optimize_Oplus_sound.
+    reflexivity.
+  Case "e = BLe".
+    simpl.
+    rewrite optimize_Oplus_sound.
+    rewrite optimize_Oplus_sound.
+    reflexivity.
+  Case "e = BNot".
+    simpl.
+    reflexivity.
+  Case "e = BAnd".
+    simpl.
+    reflexivity. Qed.
+
+Theorem optimize_Oplus_b_sound' : forall e,
+  beval (optimize_Oplus_b e) = beval e.
+Proof.
+  intros e.
+  bexp_cases (induction e) Case;
+    simpl;
+    try (rewrite optimize_Oplus_sound;
+    rewrite optimize_Oplus_sound);
+    reflexivity. Qed.
+
 Example silly_presburger_example : forall m n o p,
   m + n <= n + o /\ o + 3 = p + 3 ->
   m <= p.
@@ -192,6 +249,7 @@ Proof.
   omega.
 Qed.
 
+(* 関係としての評価 *)
 Module aevalR_first_try.
 
 Inductive aevalR : aexp -> nat -> Prop :=
@@ -232,48 +290,58 @@ Tactic Notation "aevalR_cases" tactic(first) ident(c) :=
 Theorem aeval_iff_aevalR : forall a n,
   (a || n) <-> aeval a = n.
 Proof.
+  intros a n.
   split.
   Case "->".
     intros H.
-    aevalR_cases (induction H) SCase; simpl.
-    SCase "E_ANum".
+    induction H.
+    SCase "a = ANum n".
+      simpl.
       reflexivity.
-    SCase "E_APlus".
+    SCase "a = APlus e1 e2".
+      simpl.
       rewrite IHaevalR1.
       rewrite IHaevalR2.
       reflexivity.
-    SCase "E_AMinus".
+    SCase "a = AMinus e1 e2".
+      simpl.
       rewrite IHaevalR1.
       rewrite IHaevalR2.
       reflexivity.
-    SCase "E_AMult".
+    SCase "a = AMult e1 e2".
+      simpl.
       rewrite IHaevalR1.
       rewrite IHaevalR2.
       reflexivity.
   Case "<-".
     generalize dependent n.
-    aexp_cases (induction a) SCase;
-      simpl; intros; subst.
-    SCase "ANum".
+    induction a.
+    SCase "a = ANum n".
+      simpl.
+      intros.
+      subst n.
       apply E_ANum.
-    SCase "APlus".
+    SCase "a = APlus a1 a2".
+      simpl.
+      intros.
+      subst n.
       apply E_APlus.
-        apply IHa1.
-        reflexivity.
-        apply IHa2.
-        reflexivity.
-    SCase "AMinus".
+      apply IHa1. reflexivity.
+      apply IHa2. reflexivity.
+    SCase "a = AMinus a1 a2".
+      simpl.
+      intros.
+      subst n.
       apply E_AMinus.
-        apply IHa1.
-        reflexivity.
-        apply IHa2.
-        reflexivity.
-    SCase "AMult".
+      apply IHa1. reflexivity.
+      apply IHa2. reflexivity.
+    SCase "a = AMult a1 a2".
+      simpl.
+      intros.
+      subst n.
       apply E_AMult.
-        apply IHa1.
-        reflexivity.
-        apply IHa2.
-        reflexivity. Qed.
+      apply IHa1. reflexivity.
+      apply IHa2. reflexivity. Qed.
 
 Theorem aeval_iff_aevalR' : forall a n,
   (a || n) <-> aeval a = n.
@@ -295,17 +363,25 @@ Proof.
       try apply IHa2;
       reflexivity. Qed.
 
+Reserved Notation "e '||' b" (at level 50, left associativity).
+
 Inductive bevalR : bexp -> bool -> Prop :=
 | E_BTrue : bevalR BTrue true
 | E_BFalse : bevalR BFalse false
-| E_BEq : forall (e1 e2:aexp) (b:bool),
-    bevalR (BEq e1 e2) b
-| E_BLe : forall (e1 e2:aexp) (b:bool),
-    bevalR (BLe e1 e2) b
-| E_BNot : forall (e1:bexp) (b:bool),
-    bevalR (BNot e1) b
-| E_BAnd : forall (e1 e2:bexp) (b:bool),
-    bevalR (BAnd e1 e2) b.
+| E_BEq : forall (e1 e2:aexp) (n1 n2:nat),
+    (aevalR e1 n1) -> 
+    (aevalR e2 n2) ->
+    bevalR (BEq e1 e2) (beq_nat n1 n2)
+| E_BLe : forall (e1 e2:aexp) (n1 n2:nat),
+    (aevalR e1 n1) ->
+    (aevalR e2 n2) ->
+    bevalR (BLe e1 e2) (ble_nat n1 n2)
+| E_BNot : forall (e1:bexp) (b1:bool),
+    e1 || b1 -> bevalR (BNot e1) (negb b1)
+| E_BAnd : forall (e1 e2:bexp) (b1 b2:bool),
+    e1 || b1 -> e2 || b2 -> bevalR (BAnd e1 e2) (andb b1 b2)
+
+where "e '||' b" := (bevalR e b) : type_scope.
 
 Tactic Notation "bevalR_cases" tactic(first) ident(c) :=
   first;
@@ -316,7 +392,83 @@ Tactic Notation "bevalR_cases" tactic(first) ident(c) :=
 Theorem beval_iff_bevalR : forall e b,
   bevalR e b <-> beval e = b.
 Proof.
-  Admitted.
+  split.
+  Case "->".
+    intros H.
+    induction H.
+    SCase "BTrue".
+      simpl. reflexivity.
+    SCase "BFalse".
+      simpl. reflexivity.
+    SCase "BEq".
+      simpl.
+      apply aeval_iff_aevalR in H.
+      apply aeval_iff_aevalR in H0.
+      rewrite H.
+      rewrite H0.
+      reflexivity.
+    SCase "BLe".
+      simpl.
+      apply aeval_iff_aevalR in H.
+      apply aeval_iff_aevalR in H0.
+      rewrite H.
+      rewrite H0.
+      reflexivity.
+    SCase "BNot".
+      simpl.
+      subst.
+      reflexivity.
+    SCase "BAnd".
+      simpl.
+      subst.
+      reflexivity.
+  Case "<-".
+    generalize dependent b.
+    induction e.
+    SCase "e = BTrue".
+      simpl.
+      intros.
+      subst.
+      apply E_BTrue.
+    SCase "e = BFalse".
+      simpl.
+      intros.
+      subst.
+      apply E_BFalse.
+    SCase "e = BEq".
+      simpl.
+      intros.
+      subst.
+      apply E_BEq.
+      apply aeval_iff_aevalR.
+      reflexivity.
+      apply aeval_iff_aevalR.
+      reflexivity.
+    SCase "e = BLe".
+      simpl.
+      intros.
+      subst.
+      apply E_BLe.
+      apply aeval_iff_aevalR.
+      reflexivity.
+      apply aeval_iff_aevalR.
+      reflexivity.
+    SCase "e = BNot".
+      simpl.
+      intros.
+      subst.
+      apply E_BNot.
+      apply IHe.
+      reflexivity.
+    SCase "e = BAnd".
+      simpl.
+      intros.
+      subst.
+      apply E_BAnd.
+      apply IHe1.
+      reflexivity.
+      apply IHe2.
+      reflexivity. Qed.
 
 End AExp.
 
@@ -809,3 +961,63 @@ Proof.
         rewrite Heqr.
         subst.
         reflexivity. Qed.
+
+Theorem ceval_step_more : forall i1 i2 st st' c,
+  i1 <= i2 ->
+  ceval_step st c i1 = Some st' ->
+  ceval_step st c i2 = Some st'.
+Proof.
+  induction i1 as [|i1'];
+    intros i2 st st' c HIe Hceval.
+    Case "i1 = 0".
+      inversion Hceval.
+    Case "i1 = S i1".
+      destruct i2 as [|i2'].
+      inversion HIe.
+      assert (HIe' : i1' <= i2') by omega.
+      com_cases (destruct c) SCase.
+      SCase "SKIP".
+        simpl in Hceval.
+        inversion Hceval.
+        reflexivity.
+      SCase "::=".
+        simpl in Hceval.
+        inversion Hceval.
+        reflexivity.
+      SCase ";".
+        simpl in Hceval.
+        simpl.
+        remember (ceval_step st c1 i1') as st1'o.
+        destruct st1'o.
+        SSCase "st1'o = Some".
+          symmetry in Heqst1'o.
+          apply (IHi1' i2') in Heqst1'o; try assumption.
+          rewrite Heqst1'o.
+          simpl.
+          simpl in Hceval.
+          apply (IHi1' i2') in Hceval; try assumption.
+        SSCase "st1'o = None".
+          inversion Hceval.
+      SCase "IFB".
+        simpl in Hceval.
+        simpl.
+        remember (beval st b) as beval.
+        destruct beval;
+        apply (IHi1' i2') in Hceval; assumption.
+      SCase "WHILE".
+        simpl in Hceval.
+        simpl.
+        destruct (beval st b);
+        try assumption.
+        remember (ceval_step st c i1') as st1'o.
+        destruct st1'o.
+        SSCase "st1'o = Some".
+          symmetry in Heqst1'o.
+          apply (IHi1' i2') in Heqst1'o; try assumption.
+          rewrite -> Heqst1'o.
+          simpl.
+          simpl in Hceval.
+          apply (IHi1' i2') in Hceval; try assumption.
+        SSCase "i1'o = None".
+          simpl in Hceval.
+          inversion Hceval. Qed.
