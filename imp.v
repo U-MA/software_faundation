@@ -472,6 +472,7 @@ Proof.
 
 End AExp.
 
+(* 変数を持つ式 *)
 Module Id.
 
 Inductive id : Type :=
@@ -492,25 +493,24 @@ Proof.
 Theorem beq_id_eq : forall i1 i2,
   true = beq_id i1 i2 -> i1 = i2.
 Proof.
-  intros i1 i2 H.
+  intros.
   destruct i1.
   destruct i2.
-  unfold beq_id in H.
   apply beq_nat_eq in H.
-  rewrite -> H.
+  subst.
   reflexivity. Qed.
 
 Theorem beq_id_false_not_eq : forall i1 i2,
   beq_id i1 i2 = false -> i1 <> i2.
 Proof.
-  intros i1 i2 H.
+  intros.
   destruct i1.
   destruct i2.
   unfold beq_id in H.
   apply beq_nat_false in H.
-  intro eq.
+  intro.
   apply H.
-  inversion eq as [ID].
+  inversion H0.
   reflexivity. Qed.
 
 Theorem not_eq_id_false : forall i1 i2,
@@ -531,6 +531,7 @@ Theorem beq_id_sym : forall i1 i2,
 Proof.
 Admitted.
 
+(* 状態 *)
 Definition state := id -> nat.
 
 Definition empty_state : state :=
@@ -544,8 +545,9 @@ Theorem update_eq : forall n X st,
 Proof.
   intros.
   unfold update.
-  rewrite <- (beq_id_refl X).
-  reflexivity. Qed.
+  rewrite <- beq_id_refl.
+  simpl. reflexivity. Qed.
+
 
 Theorem update_neq : forall V2 V1 n st,
   beq_id V2 V1 = false ->
