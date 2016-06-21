@@ -548,21 +548,20 @@ Proof.
   rewrite <- beq_id_refl.
   simpl. reflexivity. Qed.
 
-
 Theorem update_neq : forall V2 V1 n st,
   beq_id V2 V1 = false ->
   (update st V2 n) V1 = (st V1).
 Proof.
   intros.
   unfold update.
-  rewrite -> H.
+  rewrite H.
   reflexivity. Qed.
 
 Theorem update_example : forall (n:nat),
   (update empty_state (Id 2) n) (Id 3) = O.
 Proof.
+  intros.
   unfold update.
-  intros n.
   simpl.
   unfold empty_state.
   reflexivity. Qed.
