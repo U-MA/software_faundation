@@ -571,7 +571,8 @@ Theorem update_shadow : forall x1 x2 k1 k2 (f:state),
 Proof.
   intros.
   unfold update.
-Admitted.
+  destruct beq_id;
+  reflexivity. Qed.
 
 Theorem update_same : forall x1 k1 k2 (f:state),
   f k1 = x1 ->
@@ -579,7 +580,12 @@ Theorem update_same : forall x1 k1 k2 (f:state),
 Proof.
   intros.
   unfold update.
-Admitted.
+  remember (beq_id k1 k2) as A.
+  destruct A.
+  apply beq_id_eq in HeqA.
+  subst.
+  reflexivity.
+  reflexivity. Qed.
 
 Theorem update_permute : forall x1 x2 k1 k2 k3 f,
   beq_id k2 k1 = false ->
@@ -587,7 +593,15 @@ Theorem update_permute : forall x1 x2 k1 k2 k3 f,
   (update (update f k1 x2) k2 x1) k3.
 Proof.
   intros.
-Admitted.
+  unfold update.
+  remember (beq_id k1 k3) as A1.
+  destruct A1.
+  apply beq_id_eq in HeqA1.
+  rewrite HeqA1 in H.
+  destruct (beq_id k2 k3).
+  inversion H.
+  reflexivity.
+  reflexivity. Qed.
 
 Inductive aexp : Type :=
 |ANum : nat -> aexp
