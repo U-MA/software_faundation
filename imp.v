@@ -734,6 +734,7 @@ Definition fact_com : com :=
   Y ::= ANum 1;
   fact_loop.
 
+(* 評価 *)
 Fixpoint ceval_step1 (st:state) (c:com) : state :=
   match c with
   |SKIP =>
@@ -841,6 +842,18 @@ Definition test_ceval (st:state) (c:com) :=
   | None => None
   | Some st => Some (st X, st Y, st Z)
   end.
+
+Definition pup_to_n : com :=
+  (Y ::= (ANum 0) ;
+   WHILE (BLe (ANum 1) (AId X)) DO
+     Y ::= (APlus (AId X) (AId Y)) ;
+     X ::= (AMinus (AId X) (ANum 1))
+   END).
+
+Example pup_to_n_1 :
+  test_ceval (update empty_state X 5) pup_to_n
+  = Some (0, 15, 0).
+Proof. reflexivity. Qed.
 
 Reserved Notation "c1 '/' st '||' st'"
     (at level 40, st at level 39).
