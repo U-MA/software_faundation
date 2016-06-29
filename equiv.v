@@ -50,3 +50,20 @@ Proof.
     apply E_Skip.
     assumption.
 Qed.
+
+Theorem skip_right : forall c,
+  cequiv (c; SKIP) c.
+Proof.
+  Admitted.
+
+Theorem IFB_true_simple : forall c1 c2,
+  cequiv
+    (IFB BTrue THEN c1 ELSE c2 FI)
+    c1.
+Proof.
+  intros c1 c2.
+  split; intros H.
+  Case "->".
+    inversion H; subst. assumption. inversion H5.
+  Case "<-".
+    apply E_IfTrue. reflexivity. assumption. Qed.
