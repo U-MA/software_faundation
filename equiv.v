@@ -67,3 +67,82 @@ Proof.
     inversion H; subst. assumption. inversion H5.
   Case "<-".
     apply E_IfTrue. reflexivity. assumption. Qed.
+
+Theorem IFB_true : forall b c1 c2,
+  bequiv b BTrue ->
+  cequiv
+    (IFB b THEN c1 ELSE c2 FI)
+    c1.
+Proof.
+  intros b c1 c2 Hb.
+  split; intros H.
+  Case "->".
+    inversion H; subst.
+    SCase "b evaluates to true".
+      assumption.
+    SCase "b evaluates to false (contradiction)".
+      rewrite Hb in H5.
+      inversion H5.
+  Case "<-".
+    apply E_IfTrue; try assumption.
+    rewrite Hb. reflexivity. Qed.
+
+(* 練習問題 IFB_false *)
+Theorem IFB_false : forall b c1 c2,
+  bequiv b BFalse ->
+  cequiv
+    (IFB b THEN c1 ELSE c2 FI)
+    c2.
+Proof.
+  intros b c1 c2 Hb.
+  split; intros H.
+  Case "->".
+    inversion H.
+    rewrite Hb in H5.
+    inversion H5.
+    apply H6.
+  Case "<-".
+    apply E_IfFalse.
+    apply Hb.
+    apply H. Qed.
+
+(* 練習問題 swap_if_branches *)
+Theorem swap_if_branches : forall b e1 e2,
+  cequiv
+    (IFB b THEN e1 ELSE e2 FI)
+    (IFB BNot b THEN e2 ELSE e1 FI).
+Proof.
+  Admitted.
+
+Theorem WHILE_false : forall b c,
+  bequiv b BFalse ->
+  cequiv
+    (WHILE b DO c END)
+    SKIP.
+Proof.
+  intros b c Hb.
+  split; intros H.
+  Case "->".
+    inversion H; subst.
+    SCase "E_WhileEnd".
+      apply E_Skip.
+    SCase "E_WhileLoop".
+      rewrite Hb in H2.
+      inversion H2.
+  Case "<-".
+    inversion H; subst.
+    apply E_WhileEnd.
+    rewrite Hb.
+    reflexivity. Qed.
+
+Lemma WHILE_true_nonterm : forall b c st st',
+  bequiv b BTrue ->
+  ~( (WHILE b DO c END) / st || st').
+Proof.
+  intros b c st st' Hb.
+  intros H.
+  remember (WHILE b DO c END) as cw.
+  ceval_cases (induction H) Case;
+  inversion Heqcw; subst; clear Heqcw.
+  Case "E_WhileEnd". rewrite Hb in H. inversion H.
+  Case "E_WhileLoop". apply IHceval2. reflexivity. Qed.
