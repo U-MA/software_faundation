@@ -146,3 +146,50 @@ Proof.
   inversion Heqcw; subst; clear Heqcw.
   Case "E_WhileEnd". rewrite Hb in H. inversion H.
   Case "E_WhileLoop". apply IHceval2. reflexivity. Qed.
+
+(* 練習問題 WHILE_true *)
+Theorem WHILE_true : forall b c,
+  bequiv b BTrue ->
+  cequiv
+    (WHILE b DO c END)
+    (WHILE BTrue DO SKIP END).
+Proof.
+  intros b c Hb.
+  split; intros H.
+  Case "->".
+Admitted.
+
+Theorem loop_unrolling : forall b c,
+  cequiv
+    (WHILE b DO c END)
+    (IFB b THEN (c; WHILE b DO c END) ELSE SKIP FI).
+Proof.
+  intros b c st st'.
+  split; intros Hce.
+  Case "->".
+    inversion Hce; subst.
+    SCase "loop doesn't run".
+      apply E_IfFalse.
+      assumption.
+      apply E_Skip.
+    SCase "loop runs".
+      apply E_IfTrue.
+      assumption.
+      apply E_Seq with (st' := st'0).
+      assumption.
+      assumption.
+  Case "<-".
+    inversion Hce; subst.
+    SCase "loop runs".
+      inversion H5; subst.
+      apply E_WhileLoop with (st' := st'0).
+      assumption. assumption. assumption.
+    SCase "loop doesn't run".
+      inversion H5; subst. apply E_WhileEnd. assumption. Qed.
+
+(* 練習問題 seq_assoc *)
+
+Theorem seq_assoc : forall c1 c2 c3,
+  cequiv ((c1;c2);c3) (c1;(c2;c3)).
+Proof.
+  Admitted.
